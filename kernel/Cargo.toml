@@ -3,6 +3,7 @@ name = "jos-kernel"
 version = "0.1.0"
 
 [dependencies]
+linked_list_allocator = "0.10.5"
 
 [dependencies.elf]
 version = "0.7.4"
