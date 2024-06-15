@@ -7,6 +7,14 @@ add-symbol-file build/userspace/x86_64-unknown-none/debug/helloworld
 display/5i $pc
 display/20xg $sp
 
+# Hack due to https://github.com/WebFreak001/code-debug/issues/431
+b *0x100018
+commands
+file dist/x86_64/kernel.bin
+source my.brk
+continue
+end
+
 b isr_common_stub
 #b irq_common_stub
 #b *(irq_common_stub+44)
