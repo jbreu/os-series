@@ -9,3 +9,6 @@ ldlog.txt
 doom1.wad
 **/a.out
 qemu.log
+/userland/bash/
+userland/usr/libc.a
+userland/usr/libc.o
