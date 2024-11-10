@@ -5,16 +5,14 @@
 #include "ctype.h"
 #include "errno.h"
 #include "stdint.h"
-
-typedef enum Bool {
-  false, true
-} bool;
+#include "stdlib.h"
+#include "string.h"
+#include "stdbool.h"
 
 typedef __builtin_va_list va_list;
 #define va_start(v,l)	__builtin_va_start(v,l)
 #define va_arg(v,l)	__builtin_va_arg(v,l)
 #define va_end(v)	__builtin_va_end(v)
-
 
 #define DO_SYSCALL(syscall_num, output, r8_val, r9_val, r10_val) \
     asm volatile ( \
@@ -40,9 +38,7 @@ typedef __builtin_va_list va_list;
     )
 
 
-// String and memory functions
-uint64_t strlen( const char* str );
-bool strcmp(const char* a, const char* b);
+
 
 // File I/O functions
 long unsigned int fwrite(const void *, long unsigned int,  long unsigned int,  void *);
@@ -54,13 +50,11 @@ int feof(void* handle);
 // System calls and utilities
 uint64_t getpid();
 void draw_pixel(uint32_t x, uint32_t y, uint8_t color);
-void* malloc(long unsigned  size);
-void free(void* address);
+
 int write(uint64_t filedescriptor, const char* payload, uint64_t len);
 uint64_t draw_framebuffer(const uint8_t* framebuffer);
 uint64_t switch_vga_mode(bool vga_on);
 bool get_keystate(int key);
 void get_time(int* sec, int* usec);
-int fputc(int c, FILE *stream);
 
 #endif // __LIBC_H__

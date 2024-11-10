@@ -12,3 +12,4 @@ qemu.log
 /userland/bash/
 userland/usr/libc.a
 userland/usr/libc.o
+userland/usr/lib/*.a

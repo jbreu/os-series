@@ -10,6 +10,17 @@ FILE _stdout = {
 
 FILE *stdout = &_stdout;       // Point stdout to the _stdout instance
 
+FILE _stderr = {
+    .fd = 2,                // File descriptor 1 for stdout
+    .buffer = 0,            // Some allocated buffer space
+    .bufsize = 1024,        // Buffer size, line-buffered for terminal
+    .pos = 0,               // Current position in buffer
+    .flags = 0,             // Set to write-only
+};
+
+FILE *stderr = &_stderr;       // Point stdout to the _stdout instance
+
+int errno=0;
 
 uint64_t strlen( const char* str ) {
     int len = 0;
@@ -209,3 +220,139 @@ int fputc(int c, FILE *stream) {
 
     return (int)ch;
 }
+
+void exit( int exit_code ) {
+// TODO implement
+}
+
+int sprintf(char *str, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    char *ptr = str;
+    const char *fmt = format;
+
+    while (*fmt != '\0') {
+        if (*fmt == '%') {
+            fmt++;
+            switch (*fmt) {
+                case 'd': {
+                    int num = va_arg(args, int);
+                    ptr += sprintf(ptr, "%d", num); // Append integer
+                    break;
+                }
+                case 's': {
+                    char *s = va_arg(args, char *);
+                    ptr += sprintf(ptr, "%s", s); // Append string
+                    break;
+                }
+                case 'c': {
+                    char c = (char)va_arg(args, int); // Get character
+                    *ptr++ = c; // Append character
+                    *ptr = '\0'; // Null-terminate
+                    break;
+                }
+                default:
+                    // Handle unknown format specifiers
+                    *ptr++ = '%';
+                    *ptr++ = *fmt;
+                    *ptr = '\0';
+                    break;
+            }
+        } else {
+            *ptr++ = *fmt; // Copy regular characters
+            *ptr = '\0'; // Null-terminate
+        }
+        fmt++;
+    }
+
+    va_end(args);
+    return (int)(ptr - str); // Return the length of the formatted string
+}
+
+char * strrchr (char * str, int character ) {
+    while (*str != '\0') {
+        if (*str == character) {
+            return str;
+        }
+        str++;
+    }
+    return NULL;
+}
+
+// Globals for getopt
+char *optarg = NULL;  // Points to the argument of an option if present
+int optind = 1;       // Index in argv, starts at 1 to skip the program name
+
+int getopt(int argc, char * const argv[], const char *optstring) {
+    static int optpos = 1; // Position within the current argv element
+    char *current_arg;
+
+    if (optind >= argc || argv[optind][0] != '-' || argv[optind][1] == '\0') {
+        return -1; // No more options or not an option
+    }
+
+    current_arg = argv[optind];
+
+    if (optpos == 1 && current_arg[1] == '-') {
+        optind++;
+        return -1; // End of options (e.g., "--")
+    }
+
+    char opt = current_arg[optpos];
+    char *opt_match = strrchr(optstring, opt);
+
+    if (opt_match == NULL) {
+        fprintf(stderr, "Unknown option: -%c\n", opt);
+        optpos++;
+        if (current_arg[optpos] == '\0') {
+            optind++;
+            optpos = 1;
+        }
+        return '?'; // Return '?' for unknown option
+    }
+
+    if (*(opt_match + 1) == ':') {
+        // Option requires an argument
+        if (current_arg[optpos + 1] != '\0') {
+            // Argument is in the same argv element (e.g., "-oValue")
+            optarg = &current_arg[optpos + 1];
+            optind++;
+            optpos = 1;
+        } else if (optind + 1 < argc) {
+            // Argument is in the next argv element (e.g., "-o Value")
+            optarg = argv[++optind];
+            optind++;
+            optpos = 1;
+        } else {
+            fprintf(stderr, "Option -%c requires an argument\n", opt);
+            optpos = 1;
+            optind++;
+            return '?';
+        }
+    } else {
+        // Option does not require an argument
+        optarg = NULL;
+        optpos++;
+        if (current_arg[optpos] == '\0') {
+            optind++;
+            optpos = 1;
+        }
+    }
+
+    return opt;
+}
+
+int isalnum(int c) { return isalpha(c) || isdigit(c); }
+int isalpha(int c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+int iscntrl(int c) { return (c >= 0 && c < 32) || (c == 127); }
+int isdigit(int c) { return (c >= '0' && c <= '9'); }
+int isgraph(int c) { return c > 32 && c < 127; }
+int islower(int c) { return (c >= 'a' && c <= 'z'); }
+int isprint(int c) { return isgraph(c) || c == ' '; }
+int ispunct(int c) { return isgraph(c) && !isalnum(c); }
+int isspace(int c) { return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r'; }
+int isupper(int c) { return (c >= 'A' && c <= 'Z'); }
+int isxdigit(int c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }
+int tolower(int c) { return isupper(c) ? c + ('a' - 'A') : c; }
+int toupper(int c) { return islower(c) ? c + ('A' - 'a') : c; }
+int isblank(int c) { return c == ' ' || c == '\t'; }
