@@ -30,6 +30,7 @@ int getopt(int argc, char * const argv[], const char *optstring);
 void* fopen(const char* filename, const char* options);
 void fclose(void* handle);
 char *strerror(int errnum);
+int rename(const char* old_filename, const char* new_filename);
 
 int	isalnum(int);
 int	isalpha(int);

@@ -7,5 +7,7 @@
 // String and memory functions
 uint64_t strlen( const char* str );
 bool strcmp(const char* a, const char* b);
+char * strcpy(char * destination, const char * source);
+char * strcat(char * destination, const char * source);
 
 #endif
