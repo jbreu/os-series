@@ -48,7 +48,6 @@ int ftell(void* handle);
 int feof(void* handle);
 
 // System calls and utilities
-uint64_t getpid();
 void draw_pixel(uint32_t x, uint32_t y, uint8_t color);
 
 int write(uint64_t filedescriptor, const char* payload, uint64_t len);
