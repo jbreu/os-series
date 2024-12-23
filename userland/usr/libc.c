@@ -1,5 +1,15 @@
 #include "include/libc.h"
 
+FILE _stdin = {
+    .fd = 0,                // File descriptor 0 for stdin
+    .buffer = 0,            // Some allocated buffer space
+    .bufsize = 1024,        // Buffer size, line-buffered for terminal
+    .pos = 0,               // Current position in buffer
+    .flags = 0,             // Set to read-only
+};
+
+FILE *stdin = &_stdin;       // Point stdin to the _stdin instance
+
 FILE _stdout = {
     .fd = 1,                // File descriptor 1 for stdout
     .buffer = 0,            // Some allocated buffer space
@@ -19,8 +29,6 @@ FILE _stderr = {
 };
 
 FILE *stderr = &_stderr;       // Point stdout to the _stdout instance
-
-int errno=0;
 
 uint64_t strlen( const char* str ) {
     int len = 0;
@@ -48,13 +56,13 @@ bool strcmp(const char* a, const char* b) {
 }
 
 // Write function using syscall
-int write(uint64_t filedescriptor, const char* payload, uint64_t len) {
+ssize_t write(int filedescriptor, const void* payload, size_t len) {
     uint64_t result;
     DO_SYSCALL(1, result, filedescriptor, (uintptr_t)payload, len);
 }
 
 // Get process ID
-uint64_t getpid() {
+pid_t getpid() {
     uint64_t pid;
     DO_SYSCALL(2, pid, 0, 0, 0);  // No additional arguments needed
     return pid;
@@ -93,7 +101,7 @@ void* fopen(const char* filename, const char* options) {
 }
 
 // Close a file (currently does nothing)
-void fclose(void* handle) {
+int fclose ( FILE * stream ) {
     // TODO: Implement the fclose function
 }
 
@@ -341,18 +349,3 @@ int getopt(int argc, char * const argv[], const char *optstring) {
 
     return opt;
 }
-
-int isalnum(int c) { return isalpha(c) || isdigit(c); }
-int isalpha(int c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
-int iscntrl(int c) { return (c >= 0 && c < 32) || (c == 127); }
-int isdigit(int c) { return (c >= '0' && c <= '9'); }
-int isgraph(int c) { return c > 32 && c < 127; }
-int islower(int c) { return (c >= 'a' && c <= 'z'); }
-int isprint(int c) { return isgraph(c) || c == ' '; }
-int ispunct(int c) { return isgraph(c) && !isalnum(c); }
-int isspace(int c) { return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r'; }
-int isupper(int c) { return (c >= 'A' && c <= 'Z'); }
-int isxdigit(int c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }
-int tolower(int c) { return isupper(c) ? c + ('a' - 'A') : c; }
-int toupper(int c) { return islower(c) ? c + ('A' - 'a') : c; }
-int isblank(int c) { return c == ' ' || c == '\t'; }

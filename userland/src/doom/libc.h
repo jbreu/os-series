@@ -3,6 +3,7 @@
 
 #include <inttypes.h> 
 #include "PureDOOM.h"
+#include <stddef.h>
 
 #define DOOM_IMPLEMENTATION 
 
@@ -44,7 +45,7 @@ int ftell(void* handle);
 int feof(void* handle);
 
 // System calls and utilities
-uint64_t getpid();
+struct pid_t getpid();
 void draw_pixel(uint32_t x, uint32_t y, uint8_t color);
 void* malloc(int size);
 void free(void* address);
