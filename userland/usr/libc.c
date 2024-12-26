@@ -349,3 +349,477 @@ int getopt(int argc, char * const argv[], const char *optstring) {
 
     return opt;
 }
+
+void *memcpy(void *dest, const void *src, size_t n) {
+    char *d = dest;
+    const char *s = src;
+
+    while (n--) {
+        *d++ = *s++;
+    }
+
+    return dest;
+}
+
+void *mempcpy(void *dest, const void *src, size_t n) {
+    return (char *)memcpy(dest, src, n) + n;
+}
+
+//implement strchr, strchrnul, strstr, strcspn
+char *strchr(const char *s, int c) {
+    while (*s != '\0') {
+        if (*s == c) {
+            return (char *)s;
+        }
+        s++;
+    }
+    return NULL;
+}
+
+char *strchrnul(const char *s, int c) {
+    while (*s != '\0') {
+        if (*s == c) {
+            return (char *)s;
+        }
+        s++;
+    }
+    return (char *)s;
+}
+
+//implement strncmp
+int strncmp(const char *s1, const char *s2, size_t n) {
+    while (n--) {
+        if (*s1 != *s2) {
+            return *s1 - *s2;
+        }
+        if (*s1 == '\0') {
+            return 0;
+        }
+        s1++;
+        s2++;
+    }
+
+    return 0;
+}
+
+char *strstr(const char *haystack, const char *needle) {
+    size_t needle_len = strlen(needle);
+
+    while (*haystack != '\0') {
+        if (strncmp(haystack, needle, needle_len) == 0) {
+            return (char *)haystack;
+        }
+        haystack++;
+    }
+
+    return NULL;
+}
+
+size_t strcspn(const char *s, const char *reject) {
+    size_t count = 0;
+
+    while (*s != '\0') {
+        if (strchr(reject, *s) != NULL) {
+            return count;
+        }
+        s++;
+        count++;
+    }
+
+    return count;
+}
+
+//implement strspn
+size_t strspn(const char *s, const char *accept) {
+    size_t count = 0;
+
+    while (*s != '\0') {
+        if (strchr(accept, *s) == NULL) {
+            return count;
+        }
+        s++;
+        count++;
+    }
+
+    return count;
+}
+
+// implement strtod
+double strtod(const char *nptr, char **endptr) {
+    double result = 0.0;
+    int sign = 1;
+    int decimal = 0;
+    int exponent = 0;
+    int exponent_sign = 1;
+    int exponent_value = 0;
+    int exponent_multiplier = 1;
+
+    // Skip leading whitespace
+    while (*nptr == ' ' || *nptr == '\t') {
+        nptr++;
+    }
+
+    // Parse sign
+    if (*nptr == '-') {
+        sign = -1;
+        nptr++;
+    } else if (*nptr == '+') {
+        nptr++;
+    }
+
+    // Parse integer part
+    while (*nptr >= '0' && *nptr <= '9') {
+        result = result * 10 + (*nptr - '0');
+        nptr++;
+    }
+
+    // Parse decimal part
+    if (*nptr == '.') {
+        nptr++;
+        while (*nptr >= '0' && *nptr <= '9') {
+            result = result * 10 + (*nptr - '0');
+            decimal++;
+            nptr++;
+        }
+    }
+
+    // Parse exponent part
+    if (*nptr == 'e' || *nptr == 'E') {
+        nptr++;
+        if (*nptr == '-') {
+            exponent_sign = -1;
+            nptr++;
+        } else if (*nptr == '+') {
+            nptr++;
+        }
+        while (*nptr >= '0' && *nptr <= '9') {
+            exponent_value = exponent_value * 10 + (*nptr - '0');
+            nptr++;
+        }
+    }
+
+    // Calculate the exponent multiplier
+    while (exponent_value--) {
+        exponent_multiplier *= 10;
+    }
+
+    // Calculate the final result
+    result = sign * result;
+    if (decimal) {
+        result /= exponent_multiplier;
+    }
+    if (exponent_sign == -1) {
+        result /= exponent_multiplier;
+    } else {
+        result *= exponent_multiplier;
+    }
+
+    if (endptr) {
+        *endptr = (char *)nptr;
+    }
+
+    return result;
+}
+
+//implement strtoimax
+intmax_t strtoimax(const char *nptr, char **endptr, int base) {
+    intmax_t result = 0;
+    int sign = 1;
+
+    // Skip leading whitespace
+    while (*nptr == ' ' || *nptr == '\t') {
+        nptr++;
+    }
+
+    // Parse sign
+    if (*nptr == '-') {
+        sign = -1;
+        nptr++;
+    } else if (*nptr == '+') {
+        nptr++;
+    }
+
+    // Parse integer part
+    while (*nptr >= '0' && *nptr <= '9') {
+        result = result * base + (*nptr - '0');
+        nptr++;
+    }
+
+    if (endptr) {
+        *endptr = (char *)nptr;
+    }
+
+    return sign * result;
+}
+
+//implement strcpy, strpcy, strncpy
+char *strcpy(char *dest, const char *src) {
+    char *d = dest;
+
+    while (*src != '\0') {
+        *d++ = *src++;
+    }
+
+    *d = '\0';
+
+    return dest;
+}
+
+char *strncpy(char *dest, const char *src, size_t n) {
+    char *d = dest;
+
+    while (n-- && *src != '\0') {
+        *d++ = *src++;
+    }
+
+    *d = '\0';
+
+    return dest;
+}
+
+//implement strpcpy
+char *strpcpy(char *dest, const char *src) {
+    char *d = dest;
+
+    while (*src != '\0') {
+        *d++ = *src++;
+    }
+
+    *d = '\0';
+
+    return d;
+}
+
+//implement stpncpy
+char *stpncpy(char *dest, const char *src, size_t n) {
+    char *d = dest;
+
+    while (n-- && *src != '\0') {
+        *d++ = *src++;
+    }
+
+    *d = '\0';
+
+    return d;
+}
+
+// implement strtoumax
+uintmax_t strtoumax(const char *nptr, char **endptr, int base) {
+    uintmax_t result = 0;
+
+    // Skip leading whitespace
+    while (*nptr == ' ' || *nptr == '\t') {
+        nptr++;
+    }
+
+    // Parse integer part
+    while (*nptr >= '0' && *nptr <= '9') {
+        result = result * base + (*nptr - '0');
+        nptr++;
+    }
+
+    if (endptr) {
+        *endptr = (char *)nptr;
+    }
+
+    return result;
+}
+
+//implement stpcpy
+char *stpcpy(char *dest, const char *src) {
+    while (*src != '\0') {
+        *dest++ = *src++;
+    }
+
+    *dest = '\0';
+
+    return dest;
+}
+
+//implement strcasecmp
+int strcasecmp(const char *s1, const char *s2) {
+    while (*s1 != '\0' && *s2 != '\0') {
+        char c1 = *s1++;
+        char c2 = *s2++;
+        if (c1 >= 'A' && c1 <= 'Z') {
+            c1 += 32;
+        }
+        if (c2 >= 'A' && c2 <= 'Z') {
+            c2 += 32;
+        }
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+    }
+
+    return *s1 - *s2;
+}
+
+// implement strerror 
+char *strerror(int errnum) {
+    switch (errnum) {
+        case 0:
+            return "Success";
+        case 1:
+            return "Operation not permitted";
+        case 2:
+            return "No such file or directory";
+        case 3:
+            return "No such process";
+        case 4:
+            return "Interrupted system call";
+        case 5:
+            return "I/O error";
+        case 6:
+            return "No such device or address";
+        case 7:
+            return "Argument list too long";
+        case 8:
+            return "Exec format error";
+        case 9:
+            return "Bad file number";
+        case 10:
+            return "No child processes";
+        case 11:
+            return "Try again";
+        case 12:
+            return "Out of memory";
+        case 13:
+            return "Permission denied";
+        default:
+            return "Unknown error";
+    }
+}
+
+// Locates the first occurrence in the string s of any of the bytes in the string accept.
+char *strpbrk(const char *s, const char *accept) {
+    while (*s != '\0') {
+        if (strchr(accept, *s) != NULL) {
+            return (char *)s;
+        }
+        s++;
+    }
+
+    return NULL;
+}
+
+// implement strtok
+char *strtok(char *str, const char *delim) {
+    static char *last = NULL;
+    if (str != NULL) {
+        last = str;
+    } else if (last == NULL) {
+        return NULL;
+    }
+
+    char *start = last;
+    while (*last != '\0') {
+        if (strchr(delim, *last) != NULL) {
+            *last = '\0';
+            last++;
+            return start;
+        }
+        last++;
+    }
+
+    last = NULL;
+    return start;
+}
+
+// Mock close
+int close(int fd) {
+    // TODO: Implement the close function
+    return 0;
+}
+
+// implement bsearch
+void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) {
+    size_t left = 0;
+    size_t right = nmemb - 1;
+
+    while (left <= right) {
+        size_t middle = left + (right - left) / 2;
+        void *middle_element = (char *)base + middle * size;
+        int comparison = compar(key, middle_element);
+
+        if (comparison == 0) {
+            return middle_element;
+        } else if (comparison < 0) {
+            right = middle - 1;
+        } else {
+            left = middle + 1;
+        }
+    }
+
+    return NULL;
+}
+
+//implement atoi
+int atoi(const char *nptr) {
+    int result = 0;
+    int sign = 1;
+
+    // Skip leading whitespace
+    while (*nptr == ' ' || *nptr == '\t') {
+        nptr++;
+    }
+
+    // Parse sign
+    if (*nptr == '-') {
+        sign = -1;
+        nptr++;
+    } else if (*nptr == '+') {
+        nptr++;
+    }
+
+    // Parse integer part
+    while (*nptr >= '0' && *nptr <= '9') {
+        result = result * 10 + (*nptr - '0');
+        nptr++;
+    }
+
+    return sign * result;
+}
+
+//implement memmove
+void *memmove(void *dest, const void *src, size_t n) {
+    char *d = dest;
+    const char *s = src;
+
+    if (d < s) {
+        while (n--) {
+            *d++ = *s++;
+        }
+    } else {
+        d += n;
+        s += n;
+        while (n--) {
+            *--d = *--s;
+        }
+    }
+
+    return dest;
+}
+
+//implement memset
+void *memset(void *s, int c, size_t n) {
+    unsigned char *p = s;
+    unsigned char value = c;
+
+    while (n--) {
+        *p++ = value;
+    }
+
+    return s;
+}
+
+//implement strdup
+char *strdup(const char *s) {
+    size_t len = strlen(s) + 1;
+    char *new_s = malloc(len);
+    if (new_s == NULL) {
+        return NULL;
+    }
+
+    return (char *)memcpy(new_s, s, len);
+}
