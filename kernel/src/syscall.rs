@@ -1,8 +1,8 @@
 use crate::file::{feof, fopen, fread, fseek, ftell};
-use crate::kprintln;
 use crate::ERROR;
+use crate::{filesystem, kprintln};
 use crate::{keyboard, vga};
-use crate::{time, USERLAND};
+use crate::{time, FILESYSTEM, USERLAND};
 use core::arch::asm;
 
 #[no_mangle]
@@ -30,6 +30,9 @@ pub extern "C" fn system_call() -> u64 {
         11 => return syscall_switch_vga_mode(),
         12 => return syscall_get_keystate(),
         13 => return syscall_get_time(),
+        14 => return syscall_stat(),
+        15 => return syscall_chdir(),
+        16 => return syscall_getcwd(),
         _ => {
             ERROR!("Undefined system call triggered: {}", syscall_nr);
             return 0xdeadbeef;
@@ -217,4 +220,68 @@ fn syscall_get_time() -> u64 {
     }
 
     return 1;
+}
+
+fn syscall_stat() -> u64 {
+    let mut pathname: *const u64;
+    let mut statbuf: *mut u64;
+
+    unsafe {
+        // TODO this must be possible more elegantly
+        asm!("",
+            out("r8") pathname,
+            out("r9") statbuf,
+        );
+    }
+
+    return FILESYSTEM.lock().stat(pathname, statbuf);
+}
+
+fn syscall_chdir() -> u64 {
+    let mut pathname: *const u64;
+
+    unsafe {
+        // TODO this must be possible more elegantly
+        asm!("",
+            out("r8") pathname,
+        );
+    }
+
+    // get string from pathname pointer
+    match unsafe { core::str::from_utf8(core::slice::from_raw_parts(pathname as *const u8, 256)) } {
+        Ok(pathname) => {
+            return USERLAND
+                .lock()
+                .get_current_process()
+                .set_working_directory(pathname)
+        }
+        Err(_) => return u64::MAX,
+    }
+}
+
+fn syscall_getcwd() -> u64 {
+    let mut buf: *mut u64;
+    let mut size: u64;
+
+    unsafe {
+        asm!("",
+            out("r8") buf,
+            out("r9") size,
+        );
+    }
+
+    let cwd = USERLAND
+        .lock()
+        .get_current_process()
+        .get_working_directory();
+
+    // copy cwd to buf
+    let cwd_bytes = cwd.as_bytes();
+    let cwd_len = cwd_bytes.len();
+    let buf_slice = unsafe { core::slice::from_raw_parts_mut(buf as *mut u8, size as usize) };
+    for i in 0..core::cmp::min(cwd_len, size as usize) {
+        buf_slice[i] = cwd_bytes[i];
+    }
+
+    return cwd_len as u64;
 }
