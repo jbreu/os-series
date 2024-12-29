@@ -823,3 +823,26 @@ char *strdup(const char *s) {
 
     return (char *)memcpy(new_s, s, len);
 }
+
+int stat(const char * pathname, struct stat * statbuf) {
+    int result;
+    DO_SYSCALL(14, result, pathname, statbuf, 0);
+    return result;
+}
+
+int chdir(const char *path) {
+    int result;
+    DO_SYSCALL(15, result, path, 0, 0);
+    return result;
+}
+
+char *getcwd(char* buf, size_t size) {
+    char result;
+    DO_SYSCALL(16, result, buf, size, 0);
+
+    if (result == 0) {
+        return NULL;
+    } else {
+        return buf;
+    }
+}

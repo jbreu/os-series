@@ -1,4 +1,7 @@
 #include "libc.h"
+#include <inttypes.h> 
+#include <stdbool.h>
+#include <stdint.h>
 
 uint64_t strlen( const char* str ) {
     int len = 0;
@@ -32,7 +35,7 @@ void write(uint64_t filedescriptor, const char* payload, uint64_t len) {
 }
 
 // Get process ID
-struct pid_t getpid() {
+uint64_t getpid() {
     uint64_t pid;
     DO_SYSCALL(2, pid, 0, 0, 0);  // No additional arguments needed
     return pid;

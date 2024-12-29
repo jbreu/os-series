@@ -123,6 +123,8 @@ pub struct Process {
     state: ProcessState,
 
     heap_allocator: linked_list_allocator::LockedHeap,
+
+    working_directory: &'static str,
 }
 
 impl Process {
@@ -144,6 +146,8 @@ impl Process {
             state: ProcessState::New,
 
             heap_allocator: linked_list_allocator::LockedHeap::empty(),
+
+            working_directory: "/",
         }
     }
 
@@ -520,5 +524,14 @@ impl Process {
 
             return (elf_header.e_entry, last_v_addr, last_p_memsz);
         }
+    }
+
+    pub fn set_working_directory(&mut self, path: &'static str) -> u64 {
+        self.working_directory = path;
+        return 0;
+    }
+
+    pub fn get_working_directory(&self) -> &'static str {
+        self.working_directory
     }
 }

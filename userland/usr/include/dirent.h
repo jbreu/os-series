@@ -3,8 +3,8 @@
 struct dirent64 
   {
 #ifndef __USE_FILE_OFFSET64
-    __ino_t d_ino;
-    __off_t d_off;
+    ino_t d_ino;
+    off_t d_off;
 #else
     __ino64_t d_ino;
     __off64_t d_off;
