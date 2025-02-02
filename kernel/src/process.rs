@@ -1,8 +1,14 @@
 use crate::file;
+use crate::filesystem::Cursor;
 use crate::kprint;
 use crate::mem::allocate_page_frame;
 use core::arch::asm;
 use core::ptr::addr_of;
+use fatfs;
+use spin::Mutex;
+
+extern crate alloc;
+use alloc::vec::Vec;
 
 pub static mut KERNEL_CR3: u64 = 0;
 
@@ -125,6 +131,16 @@ pub struct Process {
     heap_allocator: linked_list_allocator::LockedHeap,
 
     working_directory: &'static str,
+    file_handles: Mutex<
+        Vec<
+            &'static mut fatfs::File<
+                'static,
+                Cursor<'static>,
+                fatfs::NullTimeProvider,
+                fatfs::LossyOemCpConverter,
+            >,
+        >,
+    >,
 }
 
 impl Process {
@@ -148,6 +164,7 @@ impl Process {
             heap_allocator: linked_list_allocator::LockedHeap::empty(),
 
             working_directory: "/",
+            file_handles: Mutex::new(Vec::new()),
         }
     }
 
@@ -230,7 +247,8 @@ impl Process {
         self.init_process_heap(v_addr, p_memsz);
         //kprint!("test alloc 5 bytes at {:x}\n", self.malloc(5));
 
-        file::fopen();
+        todo!();
+        //file::fopen();
 
         unsafe {
             asm!(
@@ -534,4 +552,15 @@ impl Process {
     pub fn get_working_directory(&self) -> &'static str {
         self.working_directory
     }
+
+    /*pub fn fopen<T>(
+        &mut self,
+        file: &fatfs::File<T, impl fatfs::TimeProvider, impl fatfs::OemCpConverter>,
+    ) -> u64
+    where
+        T: fatfs::IoBase + Read + Write + Seek,
+    {
+        self.file_handles.push(file);
+        return self.file_handles.len() as u64 - 1;
+    }*/
 }

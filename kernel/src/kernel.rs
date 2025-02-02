@@ -34,8 +34,6 @@ fn panic(info: &PanicInfo) -> ! {
 
 lazy_static! {
     pub static ref USERLAND: Mutex<userland::Userland> = Mutex::new(userland::Userland::new());
-    pub static ref FILESYSTEM: Mutex<filesystem::FileSystem> =
-        Mutex::new(filesystem::FileSystem::new());
 }
 
 #[no_mangle]

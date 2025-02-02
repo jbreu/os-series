@@ -81,7 +81,7 @@ void* malloc(long unsigned int size) {
     return (void*)address;
 }
 
-// Free memory (currently does nothing)
+// Free memory (currently does nothing) --> leaks memory
 void free(void* address) {
     // TODO: Implement the free function
 }
@@ -96,7 +96,7 @@ void* fopen(const char* filename, const char* options) {
     write(1, filename, strlen(filename));
 
     uint64_t handle;
-    DO_SYSCALL(5, handle, (uintptr_t)filename, (uintptr_t)options, 0);
+    DO_SYSCALL(5, handle, filename, options, 0);
     return (void*)handle;
 }
 
@@ -830,6 +830,12 @@ int stat(const char * pathname, struct stat * statbuf) {
     return result;
 }
 
+// lstat() is identical to stat(), except that if path is a symbolic link, then the link itself is stat-ed, not the file that it refers to. 
+int lstat(const char * pathname, struct stat * statbuf) {
+    // TODO different handling for symbolic links
+    return stat(pathname, statbuf);
+}
+
 int chdir(const char *path) {
     int result;
     DO_SYSCALL(15, result, path, 0, 0);
@@ -846,3 +852,19 @@ char *getcwd(char* buf, size_t size) {
         return buf;
     }
 }
+
+int memcmp(const void *s1, const void *s2, size_t n) {
+    const unsigned char *p1 = s1;
+    const unsigned char *p2 = s2;
+
+    while (n--) {
+        if (*p1 != *p2) {
+            return *p1 - *p2;
+        }
+        p1++;
+        p2++;
+    }
+
+    return 0;
+}
+

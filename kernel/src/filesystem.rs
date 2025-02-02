@@ -1,5 +1,10 @@
+extern crate alloc;
+use alloc::boxed::Box;
 use core::cmp;
 use core::result::Result;
+use fatfs;
+
+use alloc::vec::Vec;
 
 const DISK_IMG: &[u8] = include_bytes!("../../storage/disk.img");
 
@@ -21,24 +26,29 @@ struct Stat {
     st_ctime: u64,
 }
 
-pub struct FileSystem {
-    fs: fatfs::FileSystem<Cursor<'static>>,
+pub struct FileSystem<'a> {
+    fs: Box<fatfs::FileSystem<Cursor<'a>, fatfs::NullTimeProvider, fatfs::LossyOemCpConverter>>,
+    filehandles:
+        Vec<fatfs::File<'a, Cursor<'a>, fatfs::NullTimeProvider, fatfs::LossyOemCpConverter>>,
 }
 
-impl FileSystem {
-    pub fn new() -> FileSystem {
+impl<'a> FileSystem<'a> {
+    pub fn new() -> FileSystem<'a> {
         let buf_stream = Cursor::new(DISK_IMG);
-        let fs = fatfs::FileSystem::new(buf_stream, fatfs::FsOptions::new()).unwrap();
-        FileSystem { fs }
+        let fs = Box::new(fatfs::FileSystem::new(buf_stream, fatfs::FsOptions::new()).unwrap());
+        FileSystem {
+            fs,
+            filehandles: Vec::new(),
+        }
     }
 
     pub fn stat(&mut self, pathname: *const u64, statbuf: *mut u64) -> u64 {
         let pathname = unsafe { core::slice::from_raw_parts(pathname as *const u8, 256) };
         let statbuf = unsafe { &mut *(statbuf as *mut Stat) };
 
-        let root_dir = self.fs.root_dir();
         let (path, filename) = seperate_path_from_filename(core::str::from_utf8(pathname).unwrap());
 
+        let root_dir = self.fs.root_dir();
         let dir = root_dir.open_dir(path).unwrap();
 
         for direntry in dir.iter() {
@@ -63,6 +73,66 @@ impl FileSystem {
 
         return u64::MAX;
     }
+
+    pub fn fopen(
+        &'a mut self,
+        filename: *const u64,
+        mode: *const u64,
+    ) -> &mut fatfs::File<'a, Cursor<'a>, fatfs::NullTimeProvider, fatfs::LossyOemCpConverter> {
+        let filename = unsafe {
+            core::str::from_utf8(core::slice::from_raw_parts(filename as *const u8, 256)).unwrap()
+        };
+
+        // TODO consider mode
+        //let mode = unsafe { core::str::from_utf8(core::slice::from_raw_parts(mode as *const u8, 256)) };
+
+        let root_dir = self.fs.root_dir();
+        self.filehandles.push(root_dir.open_file(filename).unwrap());
+
+        return self.filehandles.last_mut().unwrap();
+    }
+
+    /*pub fn fread(ptr: *mut u8, num_bytes: usize) -> u64 {
+        unsafe {
+            for i in 0..num_bytes {
+                let dst = ptr.add(i);
+                let src = file_start().add(FILE_POSITION + i);
+
+                core::ptr::write_volatile(dst, *src);
+            }
+
+            FILE_POSITION += num_bytes;
+        }
+        num_bytes as u64
+    }
+
+    pub fn fseek(offset: usize, origin: usize) -> u64 {
+        unsafe {
+            let size = file_size();
+
+            match origin {
+                0 => FILE_POSITION = offset,
+                1 => FILE_POSITION += offset,
+                2 => FILE_POSITION = size - offset,
+                _ => panic!("undefined fseek"),
+            }
+        }
+        0
+    }
+
+    pub fn ftell() -> usize {
+        unsafe { FILE_POSITION }
+    }
+
+    pub fn feof() -> u64 {
+        unsafe {
+            if FILE_POSITION >= file_size() {
+                1
+            } else {
+                0
+            }
+        }
+    }*/
 }
 
 fn seperate_path_from_filename(path: &str) -> (&str, &str) {
@@ -77,7 +147,7 @@ fn seperate_path_from_filename(path: &str) -> (&str, &str) {
 
 // see also https://github.com/rafalh/rust-fatfs/issues/55
 
-struct Cursor<'a> {
+pub struct Cursor<'a> {
     inner: &'a [u8],
     pos: usize,
 }
@@ -89,7 +159,7 @@ impl<'a> Cursor<'a> {
 }
 
 #[derive(Debug)]
-enum DiskCursorIoError {
+pub enum DiskCursorIoError {
     UnexpectedEof,
     WriteZero,
 }

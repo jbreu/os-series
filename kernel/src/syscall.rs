@@ -1,8 +1,7 @@
-use crate::file::{feof, fopen, fread, fseek, ftell};
 use crate::ERROR;
 use crate::{filesystem, kprintln};
 use crate::{keyboard, vga};
-use crate::{time, FILESYSTEM, USERLAND};
+use crate::{time, USERLAND};
 use core::arch::asm;
 
 #[no_mangle]
@@ -41,11 +40,13 @@ pub extern "C" fn system_call() -> u64 {
 }
 
 fn syscall_feof() -> u64 {
-    return feof();
+    todo!();
+    return 1; //feof();
 }
 
 fn syscall_ftell() -> u64 {
-    return ftell() as u64;
+    todo!();
+    return 1; //ftell() as u64;
 }
 
 fn syscall_fseek() -> u64 {
@@ -59,7 +60,8 @@ fn syscall_fseek() -> u64 {
         );
     }
 
-    return fseek(offset, origin);
+    todo!();
+    return 1; //fseek(offset, origin);
 }
 
 fn syscall_fread() -> u64 {
@@ -73,11 +75,27 @@ fn syscall_fread() -> u64 {
         );
     }
 
-    return fread(ptr as *mut u8, num_bytes);
+    todo!();
+    return 1; //fread(ptr as *mut u8, num_bytes);
 }
 
 fn syscall_fopen() -> u64 {
-    return fopen();
+    let filename: *const u64;
+    let mode: *mut u32;
+
+    unsafe {
+        // TODO this must be possible more elegantly
+        asm!("",
+            out("r8") filename,
+            out("r9") mode,
+        );
+    }
+
+    todo!();
+    return 1; /*USERLAND
+              .lock()
+              .get_current_process()
+              .fopen(FILESYSTEM.lock().fopen(filename, mode));*/
 }
 
 fn syscall_malloc() -> u64 {
@@ -234,7 +252,8 @@ fn syscall_stat() -> u64 {
         );
     }
 
-    return FILESYSTEM.lock().stat(pathname, statbuf);
+    todo!();
+    return 1; //FILESYSTEM.lock().stat(pathname, statbuf);
 }
 
 fn syscall_chdir() -> u64 {
