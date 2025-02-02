@@ -7,6 +7,7 @@ use spin::Mutex;
 
 mod acpi;
 mod file;
+mod filesystem;
 mod gdt;
 mod heap;
 mod interrupt;
